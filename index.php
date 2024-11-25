@@ -27,7 +27,7 @@
 	}
 
 // Получение данных из таблицы
-	$sql = "SELECT `device_id` FROM `logdata` GROUP BY `device_id`";
+	$sql = "SELECT `device_id` FROM `logdata` GROUP BY `device_id` ORDER BY `device_id`";
 	$result = $conn->query($sql);
 
 	$loggerList = [];
