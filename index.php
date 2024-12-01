@@ -52,9 +52,9 @@
 	<select id="loggerSelect"></select>
 	<button id="submitBtn">Выбрать логгер</button>
 
+	<canvas id="temperatureChart" width="400" height="200"></canvas>
 	<canvas id="humidityChart" width="400" height="200"></canvas>
 	<canvas id="voltageChart" width="400" height="200"></canvas>
-	<canvas id="temperatureChart" width="400" height="200"></canvas>
 
 	<script>
 		const canvasHumidity = document.getElementById('humidityChart');
