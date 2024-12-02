@@ -12,12 +12,20 @@
 
 // CREATE TABLE `logger`.`logdata` (`device_id` INT NOT NULL , `msg_id` INT NOT NULL , `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `humidity` DECIMAL(8,6) NULL DEFAULT NULL , `temperature` DECIMAL(8,6) NULL DEFAULT NULL , `battery` DECIMAL(8,6) NULL DEFAULT NULL ) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_general_ci;
 
+// Проверка логина
+
+	session_start();
+	if (!isset($_SESSION['username'])) {
+		header("Location: auth.php");
+		exit();
+	}
+
 
 // Подключение к базе данных
 	$servername = "localhost";
 	$username = "web_local";
 	$password = "PqT3pSBspgKZbWz";
-	$dbname = "logger";
+	$dbname = $_SESSION['username'];
 
 	$conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -51,10 +59,16 @@
 <body>
 	<select id="loggerSelect"></select>
 	<button id="submitBtn">Выбрать логгер</button>
+	<br>
 
 	<canvas id="temperatureChart" width="400" height="200"></canvas>
 	<canvas id="humidityChart" width="400" height="200"></canvas>
 	<canvas id="voltageChart" width="400" height="200"></canvas>
+	<br>
+
+	<form action="logout.php" method="post">
+		<input name="logout" type="submit" value="Сменить пользователя" />
+	</form>
 
 	<script>
 		const canvasHumidity = document.getElementById('humidityChart');
