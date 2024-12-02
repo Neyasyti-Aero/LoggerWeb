@@ -9,7 +9,16 @@ CREATE TABLE global_auth.users (
 );
 ```
 ```sql
+CREATE USER 'web_local'@'localhost' IDENTIFIED BY 'PqT3pSBspgKZbWz';
 GRANT SELECT ON *.* TO 'web_local'@'localhost';
+```
+```sql
+CREATE USER 'web_local_inserter'@'localhost' IDENTIFIED BY 'n95PgsfocUQilMI';
+GRANT SELECT ON *.* TO 'web_local_inserter'@'localhost';
+```
+При регистрации каждого пользователя (создании каждой новой БД) необходимо давать права пользователю `web_local_inserter`
+```sql
+GRANT INSERT, UPDATE ON [USERNAME_СЮДА].logcfg TO 'web_local_inserter'@'localhost';
 ```
 
 Имя базы данных соответствует имени пользователя
