@@ -45,4 +45,9 @@
 		$stmt->close();
 		$conn->close();
 	}
+	else
+	{
+		header("Location: index.php");
+		exit();
+	}
 ?>

@@ -35,7 +35,7 @@
 	}
 
 // Получение данных из таблицы
-	$sql = "SELECT `device_id` FROM `logdata` GROUP BY `device_id` ORDER BY `device_id`";
+	$sql = "SELECT `device_id`, `device_name` FROM (SELECT * FROM (SELECT `device_id` FROM `logdata` GROUP BY `device_id` ORDER BY `device_id`) AS `all_loggers` LEFT JOIN (SELECT `device_id` AS `id`, `device_name` FROM `logcfg` ORDER BY `device_id`) AS `named_loggers` ON `all_loggers`.`device_id` = `named_loggers`.`id` ORDER BY `all_loggers`.`device_id`) AS `final_result`;";
 	$result = $conn->query($sql);
 
 	$loggerList = [];
@@ -61,13 +61,13 @@
 	<button id="submitBtn">Выбрать логгер</button>
 	<br>
 
-	<canvas id="temperatureChart" width="400" height="200"></canvas>
-	<canvas id="humidityChart" width="400" height="200"></canvas>
-	<canvas id="voltageChart" width="400" height="200"></canvas>
+	<canvas id="temperatureChart" width="40" height="20"></canvas>
+	<canvas id="humidityChart" width="40" height="20"></canvas>
+	<canvas id="voltageChart" width="40" height="20"></canvas>
 	<br>
 
 	<form action="logout.php" method="post">
-		<input name="logout" type="submit" value="Сменить пользователя" />
+		<input id="logoutButton" name="logout" type="submit" value="Сменить пользователя" />
 	</form>
 
 	<script>
@@ -83,16 +83,26 @@
 		var temperatureChart = null;
 
 		const select = document.getElementById('loggerSelect');
+		const logout = document.getElementById("logoutButton");
+		const logoutButtonOnState = logout.style.display;
 
 		const loggerList = <?php echo json_encode($loggerList); ?>;
 		loggerList.forEach((lognum) => {
 			var opt = document.createElement('option');
 			opt.value = lognum['device_id'];
-			opt.innerHTML = 'Логгер #' + lognum['device_id'];
+			if (lognum['device_name'] != null)
+			{
+				opt.innerHTML = lognum['device_name'] + ' (#' + lognum['device_id'] + ')';
+			}
+			else
+			{
+				opt.innerHTML = 'Логгер (#' + lognum['device_id'] + ')';
+			}
 			select.appendChild(opt);
 		})
 
 		document.getElementById('submitBtn').addEventListener('click', function() {
+			logout.style.display = "none";
 			if (humidityChart) humidityChart.destroy();
 			if (voltageChart) voltageChart.destroy();
 			if (temperatureChart) temperatureChart.destroy();
@@ -175,6 +185,8 @@
 						}
 					}
 				});
+
+				logout.style.display = logoutButtonOnState;
 
 			})
 

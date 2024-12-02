@@ -20,6 +20,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 	if ($conn->query($sql) === TRUE && $conn->query("CREATE DATABASE $username") === TRUE) {
 		$conn->query("CREATE TABLE `$username`.`logdata` (`device_id` int NOT NULL, `msg_id` int NOT NULL, `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP, `humidity` decimal(8,6) DEFAULT NULL, `temperature` decimal(8,6) DEFAULT NULL, `battery` decimal(8,6) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+		$conn->query("CREATE TABLE `logcfg` ( `device_id` int NOT NULL PRIMARY KEY, `device_name` VARCHAR(32) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;");
+		$conn->query("GRANT INSERT, UPDATE ON $username.logcfg TO 'web_local_inserter'@'localhost';");
 		echo "Регистрация успешна!";
 	} else {
 		echo "Ошибка: " . $sql . "<br>" . $conn->error;
