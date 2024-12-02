@@ -35,7 +35,7 @@
 	}
 
 // Получение данных из таблицы
-	$sql = "SELECT `device_id`, `device_name` FROM (SELECT * FROM (SELECT `device_id` FROM `logdata` GROUP BY `device_id` ORDER BY `device_id`) AS `all_loggers` LEFT JOIN (SELECT `device_id` AS `id`, `device_name` FROM `logcfg` ORDER BY `device_id`) AS `named_loggers` ON `all_loggers`.`device_id` = `named_loggers`.`id` ORDER BY `all_loggers`.`device_id`) AS `final_result`;";
+	$sql = "SELECT `device_id`, `minTime`, `maxTime`, `device_name` FROM (SELECT * FROM (SELECT `device_id`, MIN(`time`) AS `minTime`, MAX(`time`) AS `maxTime` FROM `logdata` GROUP BY `device_id` ORDER BY `device_id`) AS `all_loggers` LEFT JOIN (SELECT `device_id` AS `id`, `device_name` FROM `logcfg` ORDER BY `device_id`) AS `named_loggers` ON `all_loggers`.`device_id` = `named_loggers`.`id` ORDER BY `all_loggers`.`device_id`) AS `final_result`;";
 	$result = $conn->query($sql);
 
 	$loggerList = [];
@@ -57,13 +57,23 @@
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-	<select id="loggerSelect"></select>
+	<select onchange="updateTimes()" id="loggerSelect"></select>
 	<button id="submitBtn">Выбрать логгер</button>
 	<br>
 
-	<canvas id="temperatureChart" width="40" height="20"></canvas>
-	<canvas id="humidityChart" width="40" height="20"></canvas>
-	<canvas id="voltageChart" width="40" height="20"></canvas>
+	<input type="datetime-local" id="startTime" name="startTime"/>
+	<br>
+	<input type="datetime-local" id="endTime" name="endTime"/>
+	<br>
+	<button id="resetBtn">Сбросить фильтр</button>
+	<br>
+	<input onchange="toggleFilter()" type="checkbox" id="fixTimes" name="fixTimes" />
+	<label for="fixTimes">Зафиксировать фильтр</label>
+	<br>
+
+	<canvas id="temperatureChart" width="80" height="40"></canvas>
+	<canvas id="humidityChart" width="80" height="40"></canvas>
+	<canvas id="voltageChart" width="80" height="40"></canvas>
 	<br>
 
 	<form action="logout.php" method="post">
@@ -71,6 +81,46 @@
 	</form>
 
 	<script>
+		function updateTimes()
+		{
+			const select = document.getElementById('loggerSelect');
+			const startTime = document.getElementById('startTime');
+			const endTime = document.getElementById('endTime');
+
+			if (startTime.disabled || endTime.disabled)
+			{
+				return;
+			}
+
+			const loggerList = <?php echo json_encode($loggerList); ?>;
+
+			const obj = loggerList.find(o => o.device_id === select.value);
+			const minTime = obj['minTime'].replace(' ','T');
+			const maxTime = obj['maxTime'].replace(' ','T');
+			min = new Date(Date.parse(minTime));
+			max = new Date(Date.parse(maxTime));
+			min.setMinutes(min.getMinutes()-min.getTimezoneOffset());
+			max.setMinutes(max.getMinutes()-max.getTimezoneOffset());
+			startTime.value = min.toISOString().slice(0, 16);
+			endTime.value = max.toISOString().slice(0, 16);
+			startTime.min = startTime.value;
+			startTime.max = endTime.value;
+			endTime.min = startTime.value;
+			endTime.max = endTime.value;
+		}
+
+		function toggleFilter()
+		{
+			const checkbox = document.getElementById('fixTimes');
+			const startTime = document.getElementById('startTime');
+			const endTime = document.getElementById('endTime');
+			const resetBtn = document.getElementById('resetBtn');
+
+			startTime.disabled = checkbox.checked;
+			endTime.disabled = checkbox.checked;
+			resetBtn.disabled = checkbox.checked;
+		}
+
 		const canvasHumidity = document.getElementById('humidityChart');
 		const ctxHumidity = canvasHumidity.getContext('2d');
 		const canvasVoltage = document.getElementById('voltageChart');
@@ -85,6 +135,16 @@
 		const select = document.getElementById('loggerSelect');
 		const logout = document.getElementById("logoutButton");
 		const logoutButtonOnState = logout.style.display;
+
+		const startTime = document.getElementById('startTime');
+		const endTime = document.getElementById('endTime');
+
+		const now = new Date();
+		now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+		endTime.value = now.toISOString().slice(0, 16);
+		now.setMinutes(now.getMinutes()-180);
+		startTime.value = now.toISOString().slice(0, 16);
+		now.setMinutes(now.getMinutes()+180);
 
 		const loggerList = <?php echo json_encode($loggerList); ?>;
 		loggerList.forEach((lognum) => {
@@ -101,6 +161,12 @@
 			select.appendChild(opt);
 		})
 
+		updateTimes();
+
+		document.getElementById('resetBtn').addEventListener('click', function() {
+			updateTimes();
+		})
+
 		document.getElementById('submitBtn').addEventListener('click', function() {
 			logout.style.display = "none";
 			if (humidityChart) humidityChart.destroy();
@@ -108,13 +174,15 @@
 			if (temperatureChart) temperatureChart.destroy();
 
 			const selectedValue = select.value;
+			const min_time = startTime.value.replace('T',' ') + ':00';
+			const max_time = endTime.value.replace('T',' ') + ':59';
 
 			fetch('query.php', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ param: selectedValue })
+				body: JSON.stringify({ param: selectedValue, minTime: min_time, maxTime: max_time })
 			})
 			.then(response => response.json())
 			.then(data => {

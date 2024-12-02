@@ -22,8 +22,8 @@
 		}
 
 		// Получение данных из таблицы
-		$stmt = $conn->prepare("SELECT `time`, `humidity`, `battery`, `temperature` FROM `logdata` WHERE `device_id` = ? ORDER BY `time`");
-		$stmt->bind_param("i", $param); // Привязываем параметр к запросу (i - целое число)
+		$stmt = $conn->prepare("SELECT `time`, `humidity`, `battery`, `temperature` FROM `logdata` WHERE `device_id` = ? AND `time` BETWEEN ? AND ? ORDER BY `time` ASC;");
+		$stmt->bind_param("iss", $param, $data['minTime'], $data['maxTime']); // Привязываем параметр к запросу (i - целое число)
 
 		if ($stmt->execute())  {
 			$result = $stmt->get_result();
