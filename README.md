@@ -26,6 +26,14 @@ CREATE TABLE `logdata` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
+Создание таблицы `logcfg`
+```sql
+CREATE TABLE `logcfg` (
+  `device_id` int NOT NULL PRIMARY KEY,
+  `device_name` VARCHAR(32) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
 Тестовые данные
 ```sql
 INSERT INTO `logdata` (`device_id`, `msg_id`, `time`, `humidity`, `temperature`, `battery`) VALUES
