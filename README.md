@@ -9,7 +9,7 @@ CREATE TABLE global_auth.users (
 );
 ```
 ```sql
-GRANT SELECT ON *.* TO 'USERNAME'@'localhost';
+GRANT SELECT ON *.* TO 'web_local'@'localhost';
 ```
 
 Имя базы данных соответствует имени пользователя
